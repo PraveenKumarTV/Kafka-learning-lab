@@ -14,7 +14,7 @@ def safe_json_deserializer(data):
 consumer = KafkaConsumer(
     "orders",
     bootstrap_servers="localhost:9092",
-    auto_offset_reset="earliest",
+    
     value_deserializer=safe_json_deserializer
 )
 
