@@ -1,28 +1,38 @@
 import json
 from kafka import KafkaConsumer
 
-# Define a safe deserializer function
+
 def safe_json_deserializer(data):
     if data is None:
         return None
+
     try:
         return json.loads(data.decode("utf-8"))
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        # Return the raw string or marker instead of crashing
-        return f"[Invalid JSON Data]: {data}"
+    except Exception as e:
+        return {"error": str(e)}
+
 
 consumer = KafkaConsumer(
     "orders_v2",
     bootstrap_servers="localhost:9092",
     group_id="order-processors-v2",
-    value_deserializer=safe_json_deserializer
+    auto_offset_reset="earliest",
+    value_deserializer=safe_json_deserializer,
 )
 
-print("Waiting for orders...")
+print("Waiting for orders... (Press Ctrl+C to stop)")
 
-for message in consumer:
-    # Safely skip or print out bad data
-    if isinstance(message.value, str) and message.value.startswith("[Invalid JSON Data]"):
-        print(message.value)
-    else:
-        print("Received:", message.value)
+try:
+    for message in consumer:
+        print(
+            f"Partition={message.partition} | "
+            f"Offset={message.offset} | "
+            f"Value={message.value}"
+        )
+
+except KeyboardInterrupt:
+    print("\nShutting down consumer gracefully...")
+
+finally:
+    consumer.close()
+    print("Consumer closed.")
