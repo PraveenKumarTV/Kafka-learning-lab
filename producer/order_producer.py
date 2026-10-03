@@ -27,7 +27,7 @@ orders = [
 ]
 
 for order in orders:
-    producer.send("orders", order)
+    producer.send("orders_v2", order)
     print(f"Sent: {order}")
     time.sleep(2)
 
