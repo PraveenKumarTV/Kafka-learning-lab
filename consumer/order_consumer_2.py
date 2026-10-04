@@ -1,38 +1,37 @@
 import json
 from kafka import KafkaConsumer
 
+CONSUMER_NAME = "Consumer-2"
+
 
 def safe_json_deserializer(data):
     if data is None:
         return None
 
-    try:
-        return json.loads(data.decode("utf-8"))
-    except Exception as e:
-        return {"error": str(e)}
+    return json.loads(data.decode("utf-8"))
 
 
 consumer = KafkaConsumer(
     "orders_v2",
     bootstrap_servers="localhost:9092",
-    group_id="order-processors-v2",
-    auto_offset_reset="earliest",
+    group_id="order-processors",
     value_deserializer=safe_json_deserializer,
 )
 
-print("Waiting for orders... (Press Ctrl+C to stop)")
+print(f"{CONSUMER_NAME} started")
 
 try:
     for message in consumer:
+
         print(
+            f"{CONSUMER_NAME} | "
             f"Partition={message.partition} | "
             f"Offset={message.offset} | "
             f"Value={message.value}"
         )
 
 except KeyboardInterrupt:
-    print("\nShutting down consumer gracefully...")
+    print("\nStopping consumer...")
 
 finally:
     consumer.close()
-    print("Consumer closed.")
