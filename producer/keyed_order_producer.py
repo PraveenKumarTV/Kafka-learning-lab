@@ -8,8 +8,7 @@ producer = KafkaProducer(
     value_serializer=lambda v: json.dumps(v).encode("utf-8")
 )
 
-users = [101, 102, 103]
-
+users =list(range(100,150))
 for i in range(20):
 
     user_id = random.choice(users)
@@ -20,13 +19,25 @@ for i in range(20):
         "amount": random.randint(100, 500)
     }
 
-    producer.send(
+    # producer.send(
+    #     "orders_v2",
+    #     key=str(user_id).encode("utf-8"),
+    #     value=order
+    # )
+
+    future = producer.send(
         "orders_v2",
         key=str(user_id).encode("utf-8"),
         value=order
     )
+    
+    metadata = future.get(timeout=10)
+    
+    print(
+        f"user={user_id} -> partition={metadata.partition}"
+    )
 
-    print(f"Sent {order}")
+    #print(f"Sent {order}")
 
     time.sleep(1)
 
